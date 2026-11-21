@@ -1,0 +1,165 @@
+# Pruebas de productos. Antes: seed cargado, servidor corriendo y categorias.http ejecutado.
+# Correr en orden. Cada prueba indica el codigo ESPERADO.
+
+@base = http://localhost:8000/api/v1
+
+### 1. Listado publico paginado
+# ESPERADO: 200 {"total": 8, "items": [...]} con la categoria de cada producto
+GET {{base}}/productos?skip=0&limit=5
+
+### 2. Busqueda sin distinguir mayusculas
+# ESPERADO: 200, las 3 pizzas
+GET {{base}}/productos?search=PIZZA
+
+### 3. Filtro por categoria y disponible
+# ESPERADO: 200, solo productos de la categoria 1 disponibles
+GET {{base}}/productos?categoria_id=1&disponible=true
+
+### 4. limit fuera de rango
+# ESPERADO: 422
+GET {{base}}/productos?limit=101
+
+### 5. Detalle con su categoria
+# ESPERADO: 200
+GET {{base}}/productos/1
+
+### 6. Detalle inexistente
+# ESPERADO: 404
+GET {{base}}/productos/99999
+
+### 7. Login del admin
+# ESPERADO: 200
+POST {{base}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=Admin1234!
+
+### 8. Crear producto
+# @name helado
+# ESPERADO: 201 con categoria anidada
+POST {{base}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Helado de dulce de leche",
+  "descripcion": "Pote de 250 g",
+  "precio_base": 3000,
+  "imagen_url": "https://placehold.co/400x300?text=Helado",
+  "stock": 10,
+  "categoria_id": 3
+}
+
+### 9. Crear con categoria inexistente
+# ESPERADO: 404
+POST {{base}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto X",
+  "precio_base": 100,
+  "categoria_id": 99999
+}
+
+### 10. Crear con la categoria dada de baja en categorias.http (Postres, id 4)
+# ESPERADO: 404
+POST {{base}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Flan",
+  "precio_base": 2500,
+  "categoria_id": 4
+}
+
+### 11. Precio y stock negativos
+# ESPERADO: 422
+POST {{base}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto X",
+  "precio_base": -1,
+  "stock": -5,
+  "categoria_id": 1
+}
+
+### 12. Actualizar solo el precio
+# ESPERADO: 200, el resto queda igual
+PUT {{base}}/productos/{{helado.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "precio_base": 3200
+}
+
+### 13. Actualizar con categoria inexistente
+# ESPERADO: 404
+PUT {{base}}/productos/{{helado.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "categoria_id": 99999
+}
+
+### 14. Cambiar stock y disponibilidad
+# ESPERADO: 200 con stock 4 y disponible false
+PATCH {{base}}/productos/{{helado.response.body.$.id}}/stock
+Content-Type: application/json
+
+{
+  "stock": 4,
+  "disponible": false
+}
+
+### 15. Stock negativo
+# ESPERADO: 422
+PATCH {{base}}/productos/{{helado.response.body.$.id}}/stock
+Content-Type: application/json
+
+{
+  "stock": -1
+}
+
+### 16. Stock de un producto inexistente
+# ESPERADO: 404
+PATCH {{base}}/productos/99999/stock
+Content-Type: application/json
+
+{
+  "stock": 1
+}
+
+### 17. Baja logica
+# ESPERADO: 204 sin cuerpo
+DELETE {{base}}/productos/{{helado.response.body.$.id}}
+
+### 18. Detalle del dado de baja
+# ESPERADO: 404
+GET {{base}}/productos/{{helado.response.body.$.id}}
+
+### 19. Editar el dado de baja
+# ESPERADO: 404
+PUT {{base}}/productos/{{helado.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "precio_base": 1
+}
+
+### 20. Login de maria (user)
+# ESPERADO: 200
+POST {{base}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=maria&password=Maria1234!
+
+### 21. Crear siendo user
+# ESPERADO: 403
+POST {{base}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Producto X",
+  "precio_base": 100,
+  "categoria_id": 1
+}

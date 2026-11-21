@@ -1,0 +1,130 @@
+# Pruebas de categorias. Antes: seed cargado, servidor corriendo y auth.http ejecutado (crea a maria).
+# Correr en orden. Cada prueba indica el codigo ESPERADO.
+
+@base = http://localhost:8000/api/v1
+
+### 1. Listado publico (sin sesion)
+# ESPERADO: 200, solo activas (Bebidas, Hamburguesas, Pizzas)
+GET {{base}}/categorias
+
+### 2. Crear sin sesion
+# ESPERADO: 401
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Postres"
+}
+
+### 3. Login de maria (user)
+# ESPERADO: 200
+POST {{base}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=maria&password=Maria1234!
+
+### 4. Crear siendo user
+# ESPERADO: 403
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Postres"
+}
+
+### 5. Login del admin
+# ESPERADO: 200
+POST {{base}}/auth/token
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=Admin1234!
+
+### 6. Crear Postres (con espacios de mas)
+# @name postres
+# ESPERADO: 201, nombre "Postres" sin espacios
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "  Postres  ",
+  "descripcion": "Postres caseros"
+}
+
+### 7. Nombre repetido (en minusculas)
+# ESPERADO: 409
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "postres"
+}
+
+### 8. Nombre de 1 caracter
+# ESPERADO: 422
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "P"
+}
+
+### 9. Detalle
+# ESPERADO: 200
+GET {{base}}/categorias/{{postres.response.body.$.id}}
+
+### 10. Detalle inexistente
+# ESPERADO: 404
+GET {{base}}/categorias/99999
+
+### 11. Actualizar solo la descripcion (nombre null no pisa nada)
+# ESPERADO: 200, nombre sigue "Postres"
+PUT {{base}}/categorias/{{postres.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "nombre": null,
+  "descripcion": "Postres de la casa"
+}
+
+### 12. Actualizar con el nombre de otra categoria
+# ESPERADO: 409
+PUT {{base}}/categorias/{{postres.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "nombre": "Pizzas"
+}
+
+### 13. Actualizar inexistente
+# ESPERADO: 404
+PUT {{base}}/categorias/99999
+Content-Type: application/json
+
+{
+  "descripcion": "x"
+}
+
+### 14. Baja logica
+# ESPERADO: 204 sin cuerpo
+DELETE {{base}}/categorias/{{postres.response.body.$.id}}
+
+### 15. Detalle de la dada de baja
+# ESPERADO: 404
+GET {{base}}/categorias/{{postres.response.body.$.id}}
+
+### 16. Borrar de nuevo
+# ESPERADO: 404
+DELETE {{base}}/categorias/{{postres.response.body.$.id}}
+
+### 17. Crear otra con el nombre de la dada de baja (la baja no libera el nombre)
+# ESPERADO: 409
+POST {{base}}/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Postres"
+}
+
+### 18. Listado
+# ESPERADO: 200, Postres no aparece
+GET {{base}}/categorias

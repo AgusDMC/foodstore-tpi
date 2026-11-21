@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Colores de la app: cada uno genera sus utilidades (bg-brand, text-error...) */
+@theme {
+  --color-brand: #ea580c;
+  --color-brand-hover: #c2410c;
+  --color-secondary: #64748b;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+}
