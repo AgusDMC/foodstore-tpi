@@ -6,7 +6,7 @@ Alumno: Agustín Echeverría
 Aplicación web para un negocio de comidas: los clientes se registran, recorren el catálogo, arman un carrito y confirman pedidos; el administrador gestiona categorías, productos, stock, pedidos y usuarios desde un panel.
 
 - **Repositorio:** https://github.com/AgusDMC/foodstore-tpi
-- **Video de demostración:** 
+- **Video de demostración:** https://drive.google.com/file/d/10yj4k_IfYy8wujIgluWDTyaIhh9G_Ybo/view?usp=sharing
 
 ## Tecnologías
 
